@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<!-- 共通テスト結果別の受験計画表（静的HTML・外部通信なし） -->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f5f8">
+<meta name="format-detection" content="telephone=no">
+<title>一般選抜 受験計画表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* 判定表：上で3軸（共テ数学・共テ英語・英検）を選ぶ → その未来の受験日程・カレンダー・青学個別の届き具合が切り替わる */
+  --paper: #f3f5f8;
+  --card: #ffffff;
+  --ink: #1b2433;
+  --muted: #5d6a7c;
+  --line: #d9dfe8;
+  --accent: #2b4c9b;
+  --s-fixed: #2b4c9b;   --s-fixed-bg: #e6ecf8;
+  --s-take: #1f7a4d;    --s-take-bg: #e3f3ea;
+  --s-cond: #9a6400;    --s-cond-bg: #fbf0d9;
+  --s-key: #b03a48;     --s-key-bg: #f9e4e7;
+  --s-stop: #8a94a3;    --s-stop-bg: #eef0f3;
+  --s-rest: #a3adbb;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.65; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 28px 18px 56px; display: grid; gap: 22px; }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: 26px; line-height: 1.3; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin: 0 0 12px; text-wrap: balance; }
+.lead { color: var(--muted); margin: 6px 0 0; max-width: 66ch; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.note { color: var(--muted); font-size: 13.5px; }
+
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 18px 24px; }
+.q { display: grid; gap: 8px; align-content: start; }
+.q-head { display: grid; gap: 0; }
+.q-title { font-weight: 700; }
+.q-hint { color: var(--muted); font-size: 12.5px; }
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 13px; cursor: pointer; font-weight: 500; background: var(--card); transition: background .15s, border-color .15s; font-size: 14px; }
+.seg label:hover { border-color: var(--accent); }
+.seg input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--card); }
+.seg input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.verdict { display: grid; grid-template-columns: auto 1fr; gap: 12px 18px; align-items: center; }
+.badge { font-family: var(--font-display); font-weight: 900; font-size: 20px; color: var(--card); background: var(--accent); border-radius: 10px; padding: 10px 16px; white-space: nowrap; }
+.verdict p { margin: 0; }
+.vname { font-weight: 700; font-size: 16px; }
+.sub { color: var(--muted); font-size: 14px; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+.count { font-size: 13px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+
+.cal-wrap { overflow-x: auto; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-head { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-bottom: 4px; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; }
+.day { border-radius: 8px; padding: 6px 4px; text-align: center; min-height: 74px; display: grid; align-content: start; gap: 3px; border: 1px solid var(--line); }
+.day .dn { font-family: var(--font-num); font-size: 12.5px; color: var(--muted); }
+.day .dw { font-size: 11px; color: var(--muted); }
+.day .dl { font-size: 11.5px; font-weight: 700; line-height: 1.3; }
+.day.fixed { background: var(--s-fixed-bg); border-color: var(--s-fixed); } .day.fixed .dl { color: var(--s-fixed); }
+.day.take { background: var(--s-take-bg); border-color: var(--s-take); } .day.take .dl { color: var(--s-take); }
+.day.cond { background: var(--s-cond-bg); border-color: var(--s-cond); border-style: dashed; } .day.cond .dl { color: var(--s-cond); }
+
+/* 青学個別の届き具合 */
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 190px 1fr 120px; gap: 12px; align-items: center; }
+.bar-label { font-weight: 700; font-size: 14px; }
+.bar-label small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+.track { position: relative; height: 22px; background: var(--s-stop-bg); border-radius: 6px; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+.fill.ok { background: var(--s-take); } .fill.near { background: var(--s-cond); } .fill.no { background: var(--s-stop); }
+.mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.mark span { position: absolute; top: -18px; left: -14px; font-size: 11px; font-family: var(--font-num); color: var(--ink); white-space: nowrap; }
+.bar-val { font-family: var(--font-num); font-size: 13.5px; }
+.axis { display: grid; grid-template-columns: 190px 1fr 120px; gap: 12px; }
+.axis .ticks { display: flex; justify-content: space-between; font-family: var(--font-num); font-size: 11px; color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.list { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: 78px 92px 1fr; gap: 12px; align-items: start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); border-left-width: 5px; }
+.date { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 14px; padding-top: 2px; }
+.chip { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.what { font-weight: 700; }
+.row.fixed { border-left-color: var(--s-fixed); } .row.take { border-left-color: var(--s-take); } .row.cond { border-left-color: var(--s-cond); }
+.row.key { border-left-color: var(--s-key); } .row.stop { border-left-color: var(--s-stop); }
+.row.stop .what { text-decoration: line-through; color: var(--muted); }
+.row.rest { border-left-color: var(--s-rest); background: transparent; border-style: dashed; border-left-style: solid; }
+.row.rest .what { color: var(--muted); font-weight: 500; }
+.row.flash { animation: flash .6s ease; }
+@keyframes flash { from { box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .sticky { transition: none; } .row.flash { animation: none; } .seg label { transition: none; } }
+.c-fixed { color: var(--s-fixed); background: var(--s-fixed-bg); } .c-take { color: var(--s-take); background: var(--s-take-bg); }
+.c-cond { color: var(--s-cond); background: var(--s-cond-bg); } .c-key { color: var(--s-key); background: var(--s-key-bg); }
+.c-stop { color: var(--s-stop); background: var(--s-stop-bg); } .c-rest { color: var(--s-rest); background: transparent; border: 1px dashed var(--s-rest); }
+
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 700px; font-size: 13.5px; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { font-weight: 700; color: var(--muted); font-size: 12.5px; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+tr.on td { background: var(--s-fixed-bg); }
+
+.deadlines { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.dlc { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.dlc .d { font-family: var(--font-num); font-size: 15px; }
+.dlc .tag { font-size: 12px; font-weight: 700; margin-left: 6px; }
+.dlc.before .tag { color: var(--s-cond); } .dlc.after .tag { color: var(--s-take); }
+.dlc.keyday { border-color: var(--s-key); } .dlc.keyday .tag { color: var(--s-key); }
+.dlc ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+.foot { color: var(--muted); font-size: 12.5px; }
+.card a { color: var(--accent); }
+
+@media (max-width: 560px) {
+  .inputs { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 1fr; gap: 4px; }
+  .verdict { grid-template-columns: 1fr; }
+  .bar-row, .axis { grid-template-columns: 1fr; gap: 4px; }
+  .axis div:first-child, .axis div:last-child { display: none; }
+  h1 { font-size: 22px; }
+}
+
+/* ---- スマホ（iPhone 11 = 幅414px）向け ---- */
+html { -webkit-text-size-adjust: 100%; }
+body { -webkit-tap-highlight-color: transparent; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); padding-bottom: env(safe-area-inset-bottom); }
+a { overflow-wrap: anywhere; }
+.sticky { display: none; }
+.day .dl { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  body { font-size: 15.5px; }
+  .wrap { padding: 16px 14px 40px; gap: 16px; }
+  h1 { font-size: 21px; }
+  h2 { font-size: 16px; }
+  .card { padding: 14px; border-radius: 14px; }
+  .lead { font-size: 14px; }
+
+  .sticky { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 10; transform: translateY(-110%); transition: transform .2s; align-items: center; gap: 10px;
+    padding: calc(8px + env(safe-area-inset-top)) 14px 8px; background: var(--card); border-bottom: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(27,36,51,.06); }
+  .sticky.show { transform: none; }
+  .sbadge { font-weight: 900; color: var(--card); background: var(--accent); border-radius: 8px; padding: 2px 10px; font-size: 15px; }
+  .sname { font-weight: 700; font-size: 13.5px; line-height: 1.35; }
+
+  .inputs { grid-template-columns: 1fr; gap: 16px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .seg.two { grid-template-columns: 1fr 1fr; }
+  .seg label { min-height: 46px; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 6px 4px; font-size: 14px; line-height: 1.25; border-radius: 12px; }
+
+  .verdict { grid-template-columns: 1fr; gap: 10px; }
+  .badge { justify-self: start; font-size: 18px; padding: 6px 14px; }
+  
+  .cal { gap: 3px; }
+  .day { min-height: 58px; padding: 4px 2px; border-radius: 6px; }
+  .day .dn { font-size: 11px; }
+  .day .dl { font-size: 10px; line-height: 1.2; }
+
+  .bar-row { grid-template-columns: 1fr; gap: 4px; }
+  .bar-label small { display: block; margin-left: 0; }
+  .track { margin-top: 16px; }
+  .axis { display: none; }
+  .track { height: 18px; }
+  .bars { gap: 14px; }
+
+  .row { grid-template-columns: auto 1fr; gap: 4px 10px; padding: 10px 12px; }
+  .row .date { grid-column: 1; }
+  .row > div:nth-child(2) { grid-column: 2; justify-self: end; }
+  .row > div:nth-child(3) { grid-column: 1 / -1; }
+  .what { font-size: 15px; line-height: 1.45; }
+
+  .tbl-wrap { overflow: visible; }
+  table.matrix { min-width: 0; }
+  table.matrix thead { display: none; }
+  table.matrix, table.matrix tbody, table.matrix tr, table.matrix td { display: block; width: 100%; }
+  table.matrix tr { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; }
+  table.matrix td { border: 0; padding: 3px 0; }
+  table.matrix td::before { content: attr(data-label); display: block; font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  table.matrix td:first-child::before { display: none; }
+  table.matrix td:first-child { font-size: 15px; padding-bottom: 4px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  tr.on { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent) inset; }
+  tr.on td { background: transparent; }
+
+  .deadlines { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="sticky" id="sticky" aria-hidden="true"><span class="sbadge" id="sbadge">②</span><span class="sname" id="sname"></span></div>
+<main class="wrap">
+  <header>
+    <h1>一般選抜 受験計画表（共通テスト結果別）</h1>
+    <p class="lead">共通テストの自己採点（1/18）と英検2級の結果を選ぶと、推奨する受験日程を表示します。第一志望：明治大学経営学部。</p>
+  </header>
+
+  <section class="card inputs" aria-label="条件を選ぶ">
+    <div class="q">
+      <div class="q-head"><span class="q-title">① 共通テスト 数学</span><span class="q-hint">数IA・数ⅡBCの高い方</span></div>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="math" id="math-hi" value="hi"><label for="math-hi">85%以上</label>
+        <input type="radio" name="math" id="math-mid" value="mid" checked><label for="math-mid">75〜85%</label>
+        <input type="radio" name="math" id="math-lo" value="lo"><label for="math-lo">75%未満</label>
+      </div>
+    </div>
+    <div class="q">
+      <div class="q-head"><span class="q-title">② 共通テスト 英語</span><span class="q-hint">リーディング＋リスニング</span></div>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="eng" id="eng-hi" value="hi"><label for="eng-hi">85%以上</label>
+        <input type="radio" name="eng" id="eng-mid" value="mid" checked><label for="eng-mid">75〜85%</label>
+        <input type="radio" name="eng" id="eng-lo" value="lo"><label for="eng-lo">75%未満</label>
+      </div>
+    </div>
+    <div class="q">
+      <div class="q-head"><span class="q-title">③ 英検2級（12月受験）</span><span class="q-hint">1/21頃までにスコアが出たか</span></div>
+      <div class="seg two" role="radiogroup">
+        <input type="radio" name="eiken" id="eiken-pass" value="pass"><label for="eiken-pass">合格して間に合った</label>
+        <input type="radio" name="eiken" id="eiken-none" value="none" checked><label for="eiken-none">不合格／間に合わない</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="card verdict" aria-live="polite">
+    <div class="badge" id="badge">②</div>
+    <div>
+      <p class="vname" id="pattern-name"></p>
+      <p class="sub" id="pattern-desc"></p>
+    </div>
+    <div class="counts" id="counts"></div>
+  </section>
+
+  <section class="card">
+    <h2>2月のカレンダー（この結果の場合）</h2>
+    <div class="cal-wrap"><div class="cal-head"><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span></div><div class="cal" id="cal"></div></div>
+    <p class="note" style="margin:10px 0 0">破線＝条件付き</p>
+  </section>
+
+  <section class="card">
+    <h2>青学 経営 個別学部日程（2/15）の届き具合</h2>
+    <p class="note" style="margin:0 0 18px">共テ部分（250点）の推定得点率と河合塾ボーダーの比較</p>
+    <div class="bars" id="bars"></div>
+    <div class="axis" style="margin-top:6px"><div></div><div class="ticks"><span>60%</span><span>70%</span><span>80%</span><span>90%</span></div><div></div></div>
+    <p class="note" style="margin:12px 0 0">推定は各帯の中央値（数学・英語90／80／68%）と国語58%（対策なし）で計算。1/18に実際の点で再計算してください。A・B方式と2学科は同日（2/15午前）。</p>
+  </section>
+
+  <section>
+    <h2>受験日程と判断のポイント</h2>
+    <div class="legend">
+      <span class="chip c-key">判断日</span><span class="chip c-fixed">確定</span><span class="chip c-take">この結果で受ける</span>
+      <span class="chip c-cond">条件付き</span><span class="chip c-stop">やめる</span><span class="chip c-rest">休み</span>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="card">
+    <h2>数学×英語で決まる骨組み</h2>
+    <div class="tbl-wrap">
+      <table class="matrix">
+        <thead><tr><th>結果</th><th>条件</th><th>明治 経営</th><th>2/12以降の基本枠</th><th>青学個別（2/15）</th></tr></thead>
+        <tbody>
+          <tr data-p="A"><td data-label="結果">① 両方高い</td><td data-label="条件">数学・英語とも85%以上</td><td data-label="明治 経営">学部別 2/10</td><td data-label="2/12以降の基本枠">青学個別 2/15・明治商 2/16</td><td data-label="青学個別（2/15）">B方式（数学重視）で届く</td></tr>
+          <tr data-p="B"><td data-label="結果">② 中間</td><td data-label="条件">どちらも75%以上</td><td data-label="明治 経営">学部別 2/10（数学75〜85%なら全学部2/5も可）</td><td data-label="2/12以降の基本枠">青学個別か中央経済・明治商</td><td data-label="青学個別（2/15）">マーケティング学科B方式なら届く可能性</td></tr>
+          <tr data-p="C"><td data-label="結果">③ 数学が低い</td><td data-label="条件">数学75%未満</td><td data-label="明治 経営">全学部統一 2/5</td><td data-label="2/12以降の基本枠">立教 会計ファイナンス 2/13・明治商</td><td data-label="青学個別（2/15）">届かない</td></tr>
+          <tr data-p="D"><td data-label="結果">④ 英語が低い</td><td data-label="条件">英語75%未満・英検なし</td><td data-label="明治 経営">学部別 2/10</td><td data-label="2/12以降の基本枠">中央経済 2/14・明治商</td><td data-label="青学個別（2/15）">数学次第でマーケティングB方式がボーダー付近（3枠目）</td></tr>
+          <tr data-p="D2"><td data-label="結果">④' 英語が低い＋英検</td><td data-label="条件">英語75%未満・英検2級あり</td><td data-label="明治 経営">学部別 2/10</td><td data-label="2/12以降の基本枠">立教 会計ファイナンス 2/13・明治商</td><td data-label="青学個別（2/15）">同上</td></tr>
+          <tr data-p="E"><td data-label="結果">⑤ 両方低い</td><td data-label="条件">数学・英語とも75%未満</td><td data-label="明治 経営">全学部統一 2/5</td><td data-label="2/12以降の基本枠">中央経済 2/14・明治商</td><td data-label="青学個別（2/15）">届かない</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>共通テスト国語を判断に使わない理由</h2>
+    <ul class="note" style="margin:0;padding-left:20px">
+      <li>受験予定で共テ国語を使うのは青学個別のみ（漢文込み）。計算上は58%で固定。</li>
+      <li>漢文（45点）を捨てると上限は200点中155点。</li>
+      <li>漢文なしの共テ利用（立教経営3科目型・中央国際経営）は3教科合計で判定。立教経営のボーダーは88%、締切は1/15（共テ前）。12月の共テ模試で3教科85%以上が安定した場合のみ検討。</li>
+      <li>3月の追加機会：明治の共テ利用後期（商学部など）は2月下旬に出願可。科目は要確認。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>出願締切（共通テストは1/16・17）</h2>
+    <div class="deadlines">
+      <div class="dlc before"><span class="d">1/15</span><span class="tag">共テ前</span><ul><li>京都産業大（試験慣れの受験）</li><li>明治・青学・中央の共テ利用（前期）</li></ul></div>
+      <div class="dlc keyday"><span class="d">1/18</span><span class="tag">判断日・自己採点</span><ul><li>明治 全学部統一（数学75%未満なら出す）</li><li>青学 全学部日程（確定）</li></ul></div>
+      <div class="dlc after"><span class="d">1/20</span><span class="tag">共テ後</span><ul><li>青学 経営 個別学部日程（A・B方式）</li></ul></div>
+      <div class="dlc after"><span class="d">1/21</span><span class="tag">共テ後</span><ul><li>理科大 B方式</li><li>明治 経営 学部別</li><li>立教</li></ul></div>
+      <div class="dlc after"><span class="d">1/23</span><span class="tag">共テ後</span><ul><li>近畿大（試験慣れの受験）</li></ul></div>
+      <div class="dlc after"><span class="d">1/25</span><span class="tag">共テ後</span><ul><li>明治 商 学部別</li><li>中央 経済</li></ul></div>
+      <div class="dlc after"><span class="d">2月下旬</span><span class="tag">前期の結果を見てから</span><ul><li>明治 共テ利用 後期（商学部など、科目要確認）</li></ul></div>
+    </div>
+    <p class="note" style="margin:10px 0 0">理科大・立教は他学部の例からの推定。法政は未確認。</p>
+  </section>
+
+  <section class="card">
+    <h2>出典</h2>
+    <ul class="note" style="margin:0;padding-left:20px">
+      <li><a href="https://search.keinet.ne.jp/2286/general/border_rate">河合塾Kei-Net 明治大学 ボーダーライン</a>／<a href="https://search.keinet.ne.jp/2200/general/border_rate">青山学院大学</a>／<a href="https://search.keinet.ne.jp/2279/general/exam_subject">法政大学</a>／<a href="https://search.keinet.ne.jp/2242/general/border_rate">中央大学</a>／<a href="https://search.keinet.ne.jp/2290/general/border_rate">立教大学</a>／<a href="https://search.keinet.ne.jp/2262/general/border_rate">東京理科大学</a></li>
+      <li><a href="https://www.meiji.ac.jp/keiei/ssi/mkmht000001uh7t0-att/koukai.pdf">明治大学 経営学部 学部別入試（共通テスト併用型）の方式・科目</a></li>
+      <li><a href="https://www.tus.ac.jp/admissions/university/list/general/method_b/">東京理科大学 B方式入学試験</a></li>
+      <li><a href="https://bestjuku.com/shingaku/s-article/37471/">青山学院大学 個別学部日程A方式・B方式の科目と配点（塾選ジャーナル）</a></li>
+      <li><a href="https://jukushiru.com/article/post-38210/">2027年度 関東私立大学 一般入試日程まとめ（塾シル）</a></li>
+      <li><a href="https://www.kyoto-su.ac.jp/admissions/exam/pdf/adm-yoko.pdf">京都産業大学 2027年度 入学試験要項</a>／<a href="https://kindai.jp/information/files/articles/240416_01.pdf">近畿大学 出題範囲</a></li>
+    </ul>
+  </section>
+
+  <p class="foot">2026年11月時点の公表情報に基づく計画案です。ボーダーは河合塾Kei-Net（合格可能性50%）。出願前に各大学の募集要項で確認してください。</p>
+</main>
+
+<script>
+(function () {
+  var STATUS = {
+    key: { label: "判断日", cls: "c-key" }, fixed: { label: "確定", cls: "c-fixed" }, take: { label: "受ける", cls: "c-take" },
+    cond: { label: "条件付き", cls: "c-cond" }, stop: { label: "やめる", cls: "c-stop" }, rest: { label: "休み", cls: "c-rest" }
+  };
+  var WD = ["日","月","火","水","木","金","土"];
+  var VAL = { math: { hi: 90, mid: 80, lo: 68 }, eng: { hi: 90, mid: 80, lo: 68 } };
+  var KOKUGO = 58; // 共テ国語は対策なしの想定（200点中116点）で固定
+  var AOYAMA = [
+    { id: "kA", name: "経営学科 A方式", sub: "国語100・数学100・英語50", border: 80, type: "A" },
+    { id: "mA", name: "マーケティング学科 A方式", sub: "国語100・数学100・英語50", border: 79, type: "A" },
+    { id: "kB", name: "経営学科 B方式", sub: "数学150・英語50・国語50", border: 79, type: "B" },
+    { id: "mB", name: "マーケティング学科 B方式", sub: "数学150・英語50・国語50", border: 73, type: "B" }
+  ];
+
+  function get(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; }
+
+  function scenario(s) {
+    if (s.math === "lo" && s.eng === "lo") return "E";
+    if (s.math === "lo") return "C";
+    if (s.eng === "lo") return s.eiken === "pass" ? "D2" : "D";
+    if (s.math === "hi" && s.eng === "hi") return "A";
+    return "B";
+  }
+
+  function aoyama(s) {
+    var m = VAL.math[s.math], e = VAL.eng[s.eng], k = KOKUGO;
+    var pA = (k + m + 0.5 * e) / 2.5, pB = (1.5 * m + 0.5 * e + 0.5 * k) / 2.5;
+    var res = AOYAMA.map(function (o) {
+      var p = o.type === "A" ? pA : pB;
+      var diff = p - o.border;
+      return { o: o, p: p, diff: diff, lvl: diff >= 0 ? "ok" : (diff >= -3 ? "near" : "no") };
+    });
+    var any = res.some(function (r) { return r.lvl === "ok"; });
+    var near = res.some(function (r) { return r.lvl === "near"; });
+    return { res: res, status: any ? "take" : (near ? "cond" : "stop") };
+  }
+
+  var META = {
+    A:  { badge: "①", name: "両方高い：共テを使える枠で活用する", desc: "明治経営は学部別（共テ併用）で有利に戦えます。2/12以降は青学個別と明治商が基本です。" },
+    B:  { badge: "②", name: "中間：基本プラン", desc: "明治経営は学部別。2/12以降は、青学個別が届くならそちら、届かなければ中央経済で確保します。" },
+    C:  { badge: "③", name: "数学が低い：明治経営を共テなしの方式へ", desc: "1/18に明治の全学部統一（2/5）へ出願し、経営と商を同時に受けます。2/10の学部別はやめます。" },
+    D:  { badge: "④", name: "英語が低い：独自試験の確保を厚く", desc: "立教は外し、独自試験だけの中央経済で確保します。明治経営は学部別のままです。" },
+    D2: { badge: "④'", name: "英語が低い＋英検あり：立教を英検で受ける", desc: "立教には英語の独自試験がなく、英検スコアで英語を代えられます。明治経営は学部別のままです。" },
+    E:  { badge: "⑤", name: "両方低い：確保を厚くする", desc: "明治経営は全学部統一（2/5）へ。2/12以降は中央経済で確保し、明治商は挑戦校として受けます。" }
+  };
+
+  function plan(s, sc, ao) {
+    var r = [];
+    r.push({ m: 0, date: "1/16・17", st: "fixed", what: "共通テスト", note: "英語R＋L・数学IAに集中。国語は対策なし。" });
+    r.push({ m: 0, date: "1/18", st: "key", what: "自己採点 → この表で判定 → 出願", note: (s.math === "lo") ? "今日が明治の全学部統一の締切。今回は出願する。" : "明治の全学部統一の締切日。今回は出さない（数学75〜85%なら追加出願も可）。" });
+    r.push({ m: 0, date: "1月下旬", st: "fixed", what: "試験慣れ：京都産業大（1/26〜28）か近畿大（1/30・31）", note: "本番の流れの練習。時間配分は理科大の過去問で作る。" });
+    r.push({ m: 2, date: "2/2", st: "fixed", what: "東京理科大 経営 B方式（経営学科＋ビジネスエコノミクス学科）", short: "理科大", note: "ボーダー57.5。1回の試験で2学科を判定。共テは使わない。" });
+
+    if (sc === "C" || sc === "E") r.push({ m: 5, date: "2/5", st: "take", what: "明治 全学部統一（経営＋商を同時出願）", short: "明治全学部", note: "ボーダー経営65.0・商62.5。共テを使わずに第一志望を受ける。" });
+    else if (s.math === "mid") r.push({ m: 5, date: "2/5", st: "cond", what: "明治 全学部統一（経営）", short: "明治全学部", note: "数学がボーダー（共テ84%）付近なので、明治経営をもう1回受ける確保校。日程の負担を見て判断。" });
+    else r.push({ m: 5, date: "2/5", st: "rest", what: "休み", note: "" });
+
+    r.push({ m: 7, date: "2/7", st: "fixed", what: "青学 全学部日程（経営）", short: "青学全学部", note: "ボーダー60.0。独自試験のみ（国語は古文・漢文なし）。出願は1/18。" });
+    r.push({ m: 8, date: "2/8", st: "fixed", what: "法政 経営 A方式Ⅱ日程", short: "法政経営", note: "ボーダー57.5。確保校。" });
+
+    if (sc === "C" || sc === "E") r.push({ m: 10, date: "2/10", st: "stop", what: "明治 経営 学部別（共テ併用）", note: "共テ数学がそのまま合否に効くので見送り。2/5で受ける。" });
+    else {
+      var n10 = (s.math === "hi") ? "当日は英語・国語だけ。共テ数学の高得点で有利（ボーダー共テ84%＋62.5）。" : "当日は英語・国語だけ。共テ数学はボーダー付近なので、英語（150点）で上乗せを狙う。";
+      if (s.eiken === "pass") n10 += " 英検CSEが2200以上（各技能530以上）なら、同じ日の英語4技能活用方式にも出願できる。";
+      r.push({ m: 10, date: "2/10", st: "take", what: "明治 経営 学部別（共テ併用）", short: "明治経営", note: n10 });
+    }
+
+    r.push({ m: 12, date: "2/12", st: "fixed", what: "法政 経済 A方式Ⅱ日程", short: "法政経済", note: "ボーダー55.0。最終確保校。法政経営と対策を共通にできる。" });
+
+    // 2/12以降の枠
+    var okList = ao.res.filter(function (x) { return x.lvl === "ok"; }).map(function (x) { return x.o.name; });
+    var nearList = ao.res.filter(function (x) { return x.lvl === "near"; }).map(function (x) { return x.o.name; });
+    var aoNote = okList.length ? "届く：" + okList.join("・") + "。出願締切1/20。" : (nearList.length ? "ボーダー付近：" + nearList.join("・") + "。実際の点で計算して決める（締切1/20）。" : "");
+    var safetyNeeded = (sc === "D" || sc === "E");
+    var rikkyoSlot = (sc === "C" || sc === "D2");
+
+    var st13 = null, st14 = null, st15 = "stop", n15 = "共テの点が届かないため見送り。";
+    if (ao.status === "take") {
+      if (safetyNeeded) { st14 = "take"; st15 = "cond"; n15 = aoNote + " 3枠目として、体力に余裕があれば。"; }
+      else { st15 = "take"; n15 = aoNote; if (rikkyoSlot) st13 = "cond"; }
+    } else if (ao.status === "cond") {
+      st15 = "cond"; n15 = aoNote;
+      if (safetyNeeded) st14 = "take";
+      else if (rikkyoSlot) st13 = "take";
+      else st14 = "cond";
+    } else {
+      if (rikkyoSlot) st13 = "take"; else st14 = "take";
+    }
+
+    if (st13) {
+      var n13 = sc === "D2" ? "ボーダー57.5。英語は英検スコアで判定（独自の英語試験なし）。" : "ボーダー57.5。英語は共テの点。数学は立教の独自試験。";
+      if (st13 === "cond") n13 += " 青学個別が届くので、立教は3枠目（日程の負担を見て判断）。";
+      r.push({ m: 13, date: "2/13", st: st13, what: "立教 経済（会計ファイナンス学科）", short: "立教", note: n13 });
+    }
+    if (st14) {
+      var n14 = "ボーダー57.5。独自試験のみ。確保校。";
+      if (st14 === "cond") n14 = "ボーダー57.5。青学個別を出さない場合はこちら（締切1/25）。";
+      r.push({ m: 14, date: "2/14", st: st14, what: "中央 経済 学部別Ⅰ", short: "中央経済", note: n14 });
+    }
+    r.push({ m: 15, date: "2/15", st: st15, what: "青学 経営 個別学部日程（共テ併用・A/B方式）", short: "青学個別", note: n15 });
+    r.push({ m: 16, date: "2/16", st: "take", what: "明治 商 学部別", short: "明治商", note: (sc === "E") ? "ボーダー62.5。挑戦校。明治の対策を流用できる。" : "ボーダー62.5。明治の対策を流用できる挑戦校。発表2/24。" });
+
+    return r.sort(function (a, b) { return a.m - b.m; });
+  }
+
+  function maxRun(days) {
+    var set = {}; days.forEach(function (d) { set[d] = true; });
+    var best = 0; for (var d = 1; d <= 20; d++) { var k = 0; while (set[d + k]) k++; if (k > best) best = k; }
+    return best;
+  }
+
+  function pos(p) { var lo = 60, hi = 90; return Math.max(0, Math.min(100, (p - lo) / (hi - lo) * 100)); }
+
+  var prev = {};
+  function render() {
+    var s = { math: get("math"), eng: get("eng"), eiken: get("eiken") };
+    var sc = scenario(s), meta = META[sc], ao = aoyama(s);
+    document.getElementById("badge").textContent = meta.badge;
+    document.getElementById("pattern-name").textContent = meta.name;
+    document.getElementById("sbadge").textContent = meta.badge;
+    document.getElementById("sname").textContent = meta.name;
+    document.getElementById("pattern-desc").textContent = meta.desc;
+
+
+    // 青学バー
+    var bh = "";
+    ao.res.forEach(function (x) {
+      bh += '<div class="bar-row"><div class="bar-label">' + x.o.name + '<small>' + x.o.sub + '</small></div>' +
+        '<div class="track"><div class="fill ' + x.lvl + '" style="width:' + pos(x.p) + '%"></div>' +
+        '<div class="mark" style="left:' + pos(x.o.border) + '%"><span>' + x.o.border + '%</span></div></div>' +
+        '<div class="bar-val">推定' + x.p.toFixed(0) + '% ' + (x.lvl === "ok" ? "届く" : x.lvl === "near" ? "付近" : "届かない") + '</div></div>';
+    });
+    document.getElementById("bars").innerHTML = bh;
+
+    var list = plan(s, sc, ao);
+    var html = "", febExam = {}, examDays = [], condDays = [], n = { exam: 0, cond: 0 };
+    list.forEach(function (x) {
+      var isExam = (x.st === "fixed" || x.st === "take") && x.what !== "共通テスト";
+      if (isExam) n.exam++;
+      if (x.st === "cond") n.cond++;
+      if (x.m > 0 && (x.st === "fixed" || x.st === "take" || x.st === "cond")) {
+        febExam[x.m] = { st: x.st, label: x.short || x.what };
+        if (x.st !== "cond") examDays.push(x.m); else condDays.push(x.m);
+      }
+      var changed = prev[x.date] && prev[x.date] !== x.st + x.what;
+      prev[x.date] = x.st + x.what;
+      html += '<div class="row ' + x.st + (changed ? ' flash' : '') + '"><div class="date">' + x.date + '</div>' +
+        '<div><span class="chip ' + STATUS[x.st].cls + '">' + STATUS[x.st].label + '</span></div>' +
+        '<div><div class="what">' + x.what + '</div>' + (x.note ? '<div class="note">' + x.note + '</div>' : '') + '</div></div>';
+    });
+    document.getElementById("list").innerHTML = html;
+
+    var cal = "";
+    for (var d = 1; d <= 18; d++) {
+      var e = febExam[d];
+      cal += '<div class="day ' + (e ? e.st : "") + '"><span class="dn">2/' + d + '</span>' +
+        (e ? '<span class="dl">' + e.label + '</span>' : '') + '</div>';
+    }
+    document.getElementById("cal").innerHTML = cal;
+
+    var run = maxRun(examDays), runAll = maxRun(examDays.concat(condDays));
+    document.getElementById("counts").innerHTML =
+      '<span class="count c-fixed">受験 ' + n.exam + '回（試験慣れの受験を含む）</span>' +
+      (n.cond ? '<span class="count c-cond">条件付き ' + n.cond + '回</span>' : '') +
+      '<span class="count c-take">2月の最長連続 ' + run + '日' + (runAll > run ? '（条件付きを入れると' + runAll + '日）' : '') + '</span>';
+
+    document.querySelectorAll("tbody tr").forEach(function (tr) { tr.classList.toggle("on", tr.getAttribute("data-p") === sc); });
+  }
+
+  document.querySelectorAll("input[type=radio]").forEach(function (el) { el.addEventListener("change", render); });
+  try {
+    var v = document.querySelector(".verdict"), st = document.getElementById("sticky");
+    new IntersectionObserver(function (es) { st.classList.toggle("show", !es[0].isIntersecting && es[0].boundingClientRect.top < 0); }).observe(v);
+  } catch (e) {}
+  render();
+})();
+</script>
+</body>
+</html>
